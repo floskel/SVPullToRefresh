@@ -24,7 +24,6 @@
 
 @end
 
-
 // extends UIScrollView
 
 @interface UIScrollView (SVPullToRefresh)
