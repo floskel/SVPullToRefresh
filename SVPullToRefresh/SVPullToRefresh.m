@@ -97,7 +97,8 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 }
 
 - (void)layoutSubviews {
-    CGFloat remainingWidth = self.superview.bounds.size.width-180;
+    //NSLog(@"%@", NSStringFromCGSize(self.titleLabel.frame.size));
+    CGFloat remainingWidth = self.superview.bounds.size.width-140;
     float position = 0.50;
     
     CGRect titleFrame = titleLabel.frame;
@@ -109,12 +110,12 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
     dateLabel.frame = dateFrame;
     
     CGRect arrowFrame = arrowImageView.frame;
-    arrowFrame.origin.x = ceil(remainingWidth*position);
+    arrowFrame.origin.x = ceil(remainingWidth*position + 20);
     arrowImageView.frame = arrowFrame;
     
 	
     if(infiniteScrollingActionHandler) {
-        self.activityIndicatorView.center = CGPointMake(round(self.bounds.size.width/2), round(self.bounds.size.height/2));
+        self.activityIndicatorView.center = CGPointMake(round(self.bounds.size.width/2), round(self.bounds.size.height/2)-15);
     } else
         self.activityIndicatorView.center = self.arrowImageView.center;
 }
@@ -124,9 +125,9 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 - (UIImageView *) arrowImageView
 {
     if (!arrowImageView && pullToRefreshActionHandler) {
-        self.arrowImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 10, 10, 14)];
+        self.arrowImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 24, 12, 8)];
         arrowImageView.backgroundColor = [UIColor clearColor];
-        arrowImageView.image = [UIImage imageNamed:@"icon-arrow.png"];
+        arrowImageView.image = [UIImage imageNamed:@"arrow-pull"];
     }
     return arrowImageView;
 }
@@ -177,8 +178,8 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
     self.showsPullToRefresh = YES;
     
     self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 20, 150, 20)];
-    titleLabel.text = NSLocalizedString(@"Pull to refresh...",);
-    titleLabel.font = [UIFont boldSystemFontOfSize:14];
+    titleLabel.text = [NSLocalizedString(@"Pull to refresh",) uppercaseString];
+    titleLabel.font = [UIFont fontWithName:TITLE_FONT_NAME size:16.0];
     titleLabel.backgroundColor = [UIColor clearColor];
     titleLabel.textColor = textColor;
     [self addSubview:titleLabel];
@@ -187,7 +188,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
     
     self.state = SVPullToRefreshStateHidden;
     self.frame = CGRectMake(0, -SVPullToRefreshViewHeight-originalScrollViewContentInset.top, self.scrollView.bounds.size.width, SVPullToRefreshViewHeight);
-    self.backgroundColor = [UIColor grayColor];
+    self.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"background-pull.png"]];
     
     self.loadingView = [[UIView alloc] initWithFrame:CGRectMake(-40, 50, 40, 10)];
     self.loadingView.backgroundColor = [UIColor redColor];
@@ -202,7 +203,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
     self.originalTableFooterView = [(UITableView*)self.scrollView tableFooterView];
     infiniteScrollingActionHandler = [actionHandler copy];
     self.showsInfiniteScrolling = YES;
-    self.frame = CGRectMake(0, 0, self.scrollView.bounds.size.width, SVPullToRefreshViewHeight);
+    self.frame = CGRectMake(0, 0, self.scrollView.bounds.size.width, 60);
     [(UITableView*)self.scrollView setTableFooterView:self];
     self.state = SVPullToRefreshStateHidden;
     [self layoutSubviews];
@@ -219,6 +220,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 }
 
 - (void)setScrollViewContentInset:(UIEdgeInsets)contentInset {
+    
     [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
         self.scrollView.contentInset = contentInset;
     } completion:^(BOOL finished) {
@@ -274,7 +276,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 }
 
 - (void)scrollViewDidScroll:(CGPoint)contentOffset {
-    //NSLog(@"%@", NSStringFromCGRect(self.arrow.frame));
+    //NSLog(@"state: %i", self.state);
     if(pullToRefreshActionHandler) {
         if (self.state == SVPullToRefreshStateLoading) {
             CGFloat offset = MAX(self.scrollView.contentOffset.y * -1, 0);
@@ -285,22 +287,22 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
             
             if(!self.scrollView.isDragging && self.state == SVPullToRefreshStateTriggered){
                 self.state = SVPullToRefreshStateLoading;
-                NSLog(@"set to loading");
+                //NSLog(@"set to loading");
             }
             else if(contentOffset.y > scrollOffsetThreshold && contentOffset.y < -self.originalScrollViewContentInset.top && self.scrollView.isDragging && self.state != SVPullToRefreshStateLoading)
             {
                 self.state = SVPullToRefreshStateVisible;
-                NSLog(@"set to visible");
+                //NSLog(@"set to visible");
             }
-            else if(contentOffset.y < scrollOffsetThreshold && self.scrollView.isDragging && self.state == SVPullToRefreshStateVisible && !isAnimating)
+            else if(contentOffset.y < scrollOffsetThreshold && self.scrollView.isDragging && self.state == SVPullToRefreshStateVisible)
             {
                 self.state = SVPullToRefreshStateTriggered;
-                NSLog(@"set to triggered");
+                //NSLog(@"set to triggered");
             }
             else if(contentOffset.y >= -self.originalScrollViewContentInset.top && self.state != SVPullToRefreshStateHidden)
             {
                 self.state = SVPullToRefreshStateHidden;
-                NSLog(@"set to hidden");
+                //NSLog(@"set to hidden");
             }
         }
     }
@@ -316,66 +318,70 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 
 - (void)triggerRefresh {
     self.state = SVPullToRefreshStateLoading;
-    [self.scrollView setContentOffset:CGPointMake(0, -SVPullToRefreshViewHeight-originalScrollViewContentInset.top) animated:YES];
+    //[self.scrollView setContentOffset:CGPointMake(0, -SVPullToRefreshViewHeight-originalScrollViewContentInset.top) animated:YES];
 }
 
 - (void)startAnimating{
     state = SVPullToRefreshStateLoading;
-    titleLabel.text = NSLocalizedString(@"Loading...",);
+    titleLabel.text = [NSLocalizedString(@"Loading",) uppercaseString];
     [self.activityIndicatorView startAnimating];
     UIEdgeInsets newInsets = self.originalScrollViewContentInset;
     newInsets.top = self.frame.origin.y*-1+self.originalScrollViewContentInset.top;
     newInsets.bottom = self.scrollView.contentInset.bottom;
+    //NSLog(@"%@", NSStringFromUIEdgeInsets(newInsets));
     [self setScrollViewContentInset:newInsets];
     CGPoint originalPoint = CGPointMake(0, -self.frame.size.height-originalScrollViewContentInset.top);
     [self.scrollView setContentOffset:originalPoint animated:NO];
     [self rotateArrow:0 hide:YES];
+    [self startLoadingAnimation];
+}
+
+- (void)startLoadingAnimation
+{
+    if (!isAnimating && self.state == SVPullToRefreshStateLoading) {
+        [self performSelector:@selector(moveToLoadingView) withObject:nil afterDelay:0.5];
+
+    self.anim.delegate = self;
+    //self.anim.repeatCount = HUGE_VALF;
     
-    [self performSelector:@selector(startAnimation) withObject:nil afterDelay:0.7];
-    //[self startAnimation];
-}
-
-- (void)startAnimation
-{
-    CGPoint testPoint = CGPointMake(0, -10-originalScrollViewContentInset.top);
-    [self.scrollView setContentOffset:testPoint animated:YES];
-    if (!isAnimating) {
-        //CAKeyframeAnimation *anim = [CAKeyframeAnimation animationWithKeyPath:@"position"];
-        self.anim.delegate = self;
-        //self.anim.removedOnCompletion = YES;
-        
-        NSArray *times = [NSArray arrayWithObjects:
-                          [NSNumber numberWithFloat:0.0],
-                          //[NSNumber numberWithFloat:0.33],
-                          [NSNumber numberWithFloat:0.5],
-                          [NSNumber numberWithFloat:1.0],
-                          nil];
-        
-        [self.anim setKeyTimes:times];
-	    
-        NSArray *values = [NSArray arrayWithObjects:
-                           [NSValue valueWithCGPoint:CGPointMake(0, 55)],
-                           [NSValue valueWithCGPoint:CGPointMake(320, 55)],
-                           [NSValue valueWithCGPoint:CGPointMake(0, 55)],
-                           nil];
-        
-        [self.anim setValues:values];
-        [self.anim setDuration:2.0]; //seconds
-        //[anim setCalculationMode:kCAAnimationRotateAutoReverse];
-        [self.loadingView.layer addAnimation:self.anim forKey:@"position"];
-        isAnimating = YES;
+    NSArray *times = [NSArray arrayWithObjects:
+                      [NSNumber numberWithFloat:0.0],
+                      [NSNumber numberWithFloat:0.5],
+                      [NSNumber numberWithFloat:1.0],
+                      nil];
+    
+    [self.anim setKeyTimes:times];
+    
+    NSArray *values = [NSArray arrayWithObjects:
+                       [NSValue valueWithCGPoint:CGPointMake(0, 55)],
+                       [NSValue valueWithCGPoint:CGPointMake(320, 55)],
+                       [NSValue valueWithCGPoint:CGPointMake(0, 55)],
+                       nil];
+    
+    [self.anim setValues:values];
+    [self.anim setDuration:2.0]; //seconds
+    [self.loadingView.layer addAnimation:self.anim forKey:@"position"];
     }
 }
 
-- (void) animationDidStop:(CAAnimation *)anim finished:(BOOL)flag
+-(void) moveToLoadingView
 {
-    //NSLog(@"state: %i isAnimating: %i", self.state, isAnimating);
-    if (self.state == SVPullToRefreshStateLoading){
-        isAnimating = NO;
-        [self startAnimation];
+    if (self.state == SVPullToRefreshStateLoading) {
+        UIEdgeInsets newInset = UIEdgeInsetsMake(50, 0, 0, 0);
+        [self setScrollViewContentInset:newInset];
     }
-    else
-        isAnimating = NO;
+}
+
+-(void) animationDidStop:(CAAnimation *)anim finished:(BOOL)flag
+{
+    isAnimating = NO;
+    if (self.state == SVPullToRefreshStateLoading) {
+        [self startLoadingAnimation];
+    }
+}
+-(void) animationDidStart:(CAAnimation *)anim
+{
+    isAnimating = YES;
 }
 
 - (void)stopAnimating {
@@ -389,6 +395,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
         [self.activityIndicatorView stopAnimating];
         [self setScrollViewContentInset:self.originalScrollViewContentInset];
         [self rotateArrow:0 hide:YES];
+        //isAnimating = NO;
         return;
     }
     
@@ -403,7 +410,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
     if(pullToRefreshActionHandler) {
         switch (newState) {
             case SVPullToRefreshStateHidden:
-                titleLabel.text = NSLocalizedString(@"Pull to refresh...",);
+                titleLabel.text = [NSLocalizedString(@"pull to refresh",) uppercaseString];
                 [self.activityIndicatorView stopAnimating];
                 [self setScrollViewContentInset:self.originalScrollViewContentInset];
                 [self rotateArrow:0 hide:NO];
@@ -411,7 +418,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
                 break;
                 
             case SVPullToRefreshStateVisible:
-                titleLabel.text = NSLocalizedString(@"Pull to refresh...",);
+                titleLabel.text = [NSLocalizedString(@"pull to refresh",) uppercaseString];
                 arrowImageView.alpha = 1;
                 [self.activityIndicatorView stopAnimating];
                 [self setScrollViewContentInset:self.originalScrollViewContentInset];
@@ -419,7 +426,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
                 break;
                 
             case SVPullToRefreshStateTriggered:
-                titleLabel.text = NSLocalizedString(@"Release to refresh...",);
+                titleLabel.text = [NSLocalizedString(@"release to refresh",) uppercaseString];
                 [self rotateArrow:M_PI hide:NO];
                 break;
                 
