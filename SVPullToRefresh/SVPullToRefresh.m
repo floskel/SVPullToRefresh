@@ -19,7 +19,7 @@ enum {
 
 typedef NSUInteger SVPullToRefreshState;
 
-static CGFloat const SVPullToRefreshViewHeight = 60;
+static CGFloat const SVPullToRefreshViewHeight = 225;
 
 @interface SVPullToRefreshArrow : UIView
 @property (nonatomic, strong) UIColor *arrowColor;
@@ -29,6 +29,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 @interface SVPullToRefresh ()
 {
     BOOL isAnimating;
+    CGFloat moveToLoadingViewTiming;
 }
 
 - (id)initWithScrollView:(UIScrollView*)scrollView;
@@ -125,7 +126,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 - (UIImageView *) arrowImageView
 {
     if (!arrowImageView && pullToRefreshActionHandler) {
-        self.arrowImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 24, 12, 8)];
+        self.arrowImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, SVPullToRefreshViewHeight - 36, 12, 8)];
         arrowImageView.backgroundColor = [UIColor clearColor];
         arrowImageView.image = [UIImage imageNamed:@"arrow-pull"];
     }
@@ -174,10 +175,15 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 
 - (void)setPullToRefreshActionHandler:(void (^)(void))actionHandler {
     pullToRefreshActionHandler = [actionHandler copy];
+    _scrollView.clipsToBounds = NO;
     [_scrollView addSubview:self];
+    self.state = SVPullToRefreshStateHidden;
+    self.frame = CGRectMake(0, -SVPullToRefreshViewHeight-originalScrollViewContentInset.top, self.scrollView.bounds.size.width, SVPullToRefreshViewHeight);
+    self.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"background-pull.png"]];
+
     self.showsPullToRefresh = YES;
     
-    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 20, 150, 20)];
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, SVPullToRefreshViewHeight - 40, 150, 20)];
     titleLabel.text = [NSLocalizedString(@"Pull to refresh",) uppercaseString];
     titleLabel.font = [UIFont fontWithName:TITLE_FONT_NAME size:16.0];
     titleLabel.backgroundColor = [UIColor clearColor];
@@ -186,16 +192,15 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
     
     [self addSubview:self.arrowImageView];
     
-    self.state = SVPullToRefreshStateHidden;
-    self.frame = CGRectMake(0, -SVPullToRefreshViewHeight-originalScrollViewContentInset.top, self.scrollView.bounds.size.width, SVPullToRefreshViewHeight);
-    self.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"background-pull.png"]];
     
-    self.loadingView = [[UIView alloc] initWithFrame:CGRectMake(-40, 50, 40, 10)];
+    self.loadingView = [[UIView alloc] initWithFrame:CGRectMake(-40, 0, 40, 10)];
     self.loadingView.backgroundColor = [UIColor redColor];
-    
-    self.anim = [CAKeyframeAnimation animationWithKeyPath:@"position"];
-    
     [self addSubview:self.loadingView];
+    self.anim = [CAKeyframeAnimation animationWithKeyPath:@"position"];
+
+//    CGRect frame = self.frame;
+//    frame.origin.y = self.frame.origin.y + 20
+//    [self setFrame:frame];
     
 }
 
@@ -221,7 +226,12 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 
 - (void)setScrollViewContentInset:(UIEdgeInsets)contentInset {
     
-    [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
+//    CGFloat duration = (contentInset.top / (self.scrollView.contentInset.top*2));
+//    NSLog(@"tar %f", contentInset.top);
+//    NSLog(@"cur %f", self.scrollView.contentInset.top);
+//    NSLog(@"ori %f", self.originalScrollViewContentInset.top);
+    
+    [UIView animateWithDuration:0.4 delay:0.0 options:UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
         self.scrollView.contentInset = contentInset;
     } completion:^(BOOL finished) {
         if(self.state == SVPullToRefreshStateHidden && contentInset.top == self.originalScrollViewContentInset.top)
@@ -276,31 +286,33 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 }
 
 - (void)scrollViewDidScroll:(CGPoint)contentOffset {
-    //NSLog(@"state: %i", self.state);
+    //NSLog(@"y: %f", contentOffset.y);
+//    NSLog(@"state: %i", self.state);
+    //NSLog(@"dragggin: %i", self.scrollView.tag);
     if(pullToRefreshActionHandler) {
         if (self.state == SVPullToRefreshStateLoading) {
             CGFloat offset = MAX(self.scrollView.contentOffset.y * -1, 0);
             offset = MIN(offset, self.originalScrollViewContentInset.top + SVPullToRefreshViewHeight);
             self.scrollView.contentInset = UIEdgeInsetsMake(self.originalScrollViewContentInset.top + 10, 0.0f, 0.0f, 0.0f);
         } else {
-            CGFloat scrollOffsetThreshold = self.frame.origin.y;//-self.originalScrollViewContentInset.top;
+            CGFloat scrollOffsetThreshold = ((self.titleLabel.center.y - SVPullToRefreshViewHeight) * 2) - self.originalScrollViewContentInset.top;
+            //NSLog(@"threshold: %f", scrollOffsetThreshold);
             
             if(!self.scrollView.isDragging && self.state == SVPullToRefreshStateTriggered){
                 self.state = SVPullToRefreshStateLoading;
                 //NSLog(@"set to loading");
             }
-            else if(contentOffset.y > scrollOffsetThreshold && contentOffset.y < -self.originalScrollViewContentInset.top && self.scrollView.isDragging && self.state != SVPullToRefreshStateLoading)
+            else if(contentOffset.y > scrollOffsetThreshold && contentOffset.y < -self.originalScrollViewContentInset.top /*&& self.scrollView.isDragging*/ && self.state != SVPullToRefreshStateLoading)
             {
                 self.state = SVPullToRefreshStateVisible;
                 //NSLog(@"set to visible");
             }
-            else if(contentOffset.y < scrollOffsetThreshold && self.scrollView.isDragging && self.state == SVPullToRefreshStateVisible)
+            else if(contentOffset.y < scrollOffsetThreshold /*&& self.scrollView.isDragging*/   && self.state == SVPullToRefreshStateVisible)
             {
                 self.state = SVPullToRefreshStateTriggered;
                 //NSLog(@"set to triggered");
             }
-            else if(contentOffset.y >= -self.originalScrollViewContentInset.top && self.state != SVPullToRefreshStateHidden)
-            {
+            else if(contentOffset.y >= -self.originalScrollViewContentInset.top && self.state != SVPullToRefreshStateHidden) {
                 self.state = SVPullToRefreshStateHidden;
                 //NSLog(@"set to hidden");
             }
@@ -326,12 +338,13 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
     titleLabel.text = [NSLocalizedString(@"Loading",) uppercaseString];
     [self.activityIndicatorView startAnimating];
     UIEdgeInsets newInsets = self.originalScrollViewContentInset;
-    newInsets.top = self.frame.origin.y*-1+self.originalScrollViewContentInset.top;
+    newInsets.top = -self.frame.origin.y+self.originalScrollViewContentInset.top;
     newInsets.bottom = self.scrollView.contentInset.bottom;
-    //NSLog(@"%@", NSStringFromUIEdgeInsets(newInsets));
     [self setScrollViewContentInset:newInsets];
-    CGPoint originalPoint = CGPointMake(0, -self.frame.size.height-originalScrollViewContentInset.top);
+
+    CGPoint originalPoint = CGPointMake(0, (self.titleLabel.center.y - SVPullToRefreshViewHeight) * 2 - originalScrollViewContentInset.top);
     [self.scrollView setContentOffset:originalPoint animated:NO];
+    
     [self rotateArrow:0 hide:YES];
     [self startLoadingAnimation];
 }
@@ -339,7 +352,7 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 - (void)startLoadingAnimation
 {
     if (!isAnimating && self.state == SVPullToRefreshStateLoading) {
-        [self performSelector:@selector(moveToLoadingView) withObject:nil afterDelay:0.5];
+        [self performSelector:@selector(moveToLoadingView) withObject:nil afterDelay:0.2];
 
     self.anim.delegate = self;
     //self.anim.repeatCount = HUGE_VALF;
@@ -353,9 +366,9 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
     [self.anim setKeyTimes:times];
     
     NSArray *values = [NSArray arrayWithObjects:
-                       [NSValue valueWithCGPoint:CGPointMake(0, 55)],
-                       [NSValue valueWithCGPoint:CGPointMake(320, 55)],
-                       [NSValue valueWithCGPoint:CGPointMake(0, 55)],
+                       [NSValue valueWithCGPoint:CGPointMake(0, SVPullToRefreshViewHeight - 5)],
+                       [NSValue valueWithCGPoint:CGPointMake(320, SVPullToRefreshViewHeight - 5)],
+                       [NSValue valueWithCGPoint:CGPointMake(0, SVPullToRefreshViewHeight - 5)],
                        nil];
     
     [self.anim setValues:values];
@@ -364,10 +377,11 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
     }
 }
 
--(void) moveToLoadingView
+- (void) moveToLoadingView
 {
+    //NSLog(@"%f %f", self.frame.size.height, self.originalScrollViewContentInset.top);
     if (self.state == SVPullToRefreshStateLoading) {
-        UIEdgeInsets newInset = UIEdgeInsetsMake(50, 0, 0, 0);
+        UIEdgeInsets newInset = UIEdgeInsetsMake(self.scrollView.contentInset.top + 20, 0, 0, 0);
         [self setScrollViewContentInset:newInset];
     }
 }
@@ -389,6 +403,9 @@ static CGFloat const SVPullToRefreshViewHeight = 60;
 }
 
 - (void)setState:(SVPullToRefreshState)newState {
+    //NSLog(@"%@", NSStringFromCGRect(self.frame));
+    
+    //[self.superview bringSubviewToFront:self];
     
     if(pullToRefreshActionHandler && !self.showsPullToRefresh && !self.activityIndicatorView.isAnimating) {
         titleLabel.text = NSLocalizedString(@"",);
