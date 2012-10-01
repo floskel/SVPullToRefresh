@@ -9,6 +9,7 @@
 
 #import <QuartzCore/QuartzCore.h>
 #import "SVPullToRefresh.h"
+#import "EvpActivityIndicatorView.h"
 
 enum {
     SVPullToRefreshStateHidden = 1,
@@ -46,7 +47,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 
 @property (nonatomic, strong) UIImageView *arrowImageView;
 
-@property (nonatomic, strong) UIActivityIndicatorView *activityIndicatorView;
+@property (nonatomic, strong) EvpActivityIndicatorView *activityIndicatorView;
 @property (nonatomic, strong) UILabel *titleLabel;
 
 @property (nonatomic, strong) UIView *loadingView;
@@ -82,7 +83,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     self.scrollView = scrollView;
     
     // default styling values
-    self.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;
+    self.activityIndicatorView = [[EvpActivityIndicatorView alloc] init];
     self.textColor = [UIColor darkGrayColor];
     
     self.originalScrollViewContentInset = self.scrollView.contentInset;
@@ -133,14 +134,14 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     return arrowImageView;
 }
 
-- (UIActivityIndicatorView *)activityIndicatorView {
-    if(!activityIndicatorView) {
-        activityIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-        activityIndicatorView.hidesWhenStopped = YES;
-        [self addSubview:activityIndicatorView];
-    }
-    return activityIndicatorView;
-}
+//- (UIActivityIndicatorView *)activityIndicatorView {
+//    if(!activityIndicatorView) {
+//        activityIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+//        activityIndicatorView.hidesWhenStopped = YES;
+//        [self addSubview:activityIndicatorView];
+//    }
+//    return activityIndicatorView;
+//}
 
 - (UILabel *)dateLabel {
     if(!dateLabel && pullToRefreshActionHandler) {
@@ -197,10 +198,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     self.loadingView.backgroundColor = [UIColor redColor];
     [self addSubview:self.loadingView];
     self.anim = [CAKeyframeAnimation animationWithKeyPath:@"position"];
-
-//    CGRect frame = self.frame;
-//    frame.origin.y = self.frame.origin.y + 20
-//    [self setFrame:frame];
+    [self addSubview:self.activityIndicatorView];
     
 }
 
@@ -211,6 +209,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     self.frame = CGRectMake(0, 0, self.scrollView.bounds.size.width, 60);
     [(UITableView*)self.scrollView setTableFooterView:self];
     self.state = SVPullToRefreshStateHidden;
+    [self addSubview:self.activityIndicatorView];
     [self layoutSubviews];
 }
 
@@ -220,9 +219,9 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 	dateLabel.textColor = newTextColor;
 }
 
-- (void)setActivityIndicatorViewStyle:(UIActivityIndicatorViewStyle)viewStyle {
-    self.activityIndicatorView.activityIndicatorViewStyle = viewStyle;
-}
+//- (void)setActivityIndicatorViewStyle:(UIActivityIndicatorViewStyle)viewStyle {
+//    self.activityIndicatorView.activityIndicatorViewStyle = viewStyle;
+//}
 
 - (void)setScrollViewContentInset:(UIEdgeInsets)contentInset {
     
