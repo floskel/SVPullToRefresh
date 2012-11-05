@@ -117,7 +117,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     
 	
     if(infiniteScrollingActionHandler) {
-        self.activityIndicatorView.center = CGPointMake(round(self.bounds.size.width/2), round(self.bounds.size.height/2)-15);
+        self.activityIndicatorView.center = CGPointMake(round(self.bounds.size.width/2), round(self.bounds.size.height) - 35);
     } else
         self.activityIndicatorView.center = self.arrowImageView.center;
 }
@@ -134,14 +134,6 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     return arrowImageView;
 }
 
-//- (UIActivityIndicatorView *)activityIndicatorView {
-//    if(!activityIndicatorView) {
-//        activityIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
-//        activityIndicatorView.hidesWhenStopped = YES;
-//        [self addSubview:activityIndicatorView];
-//    }
-//    return activityIndicatorView;
-//}
 
 - (UILabel *)dateLabel {
     if(!dateLabel && pullToRefreshActionHandler) {
@@ -193,20 +185,22 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     
     [self addSubview:self.arrowImageView];
     
-    
     self.loadingView = [[UIView alloc] initWithFrame:CGRectMake(-40, 0, 40, 10)];
     self.loadingView.backgroundColor = [UIColor redColor];
     [self addSubview:self.loadingView];
     self.anim = [CAKeyframeAnimation animationWithKeyPath:@"position"];
     [self addSubview:self.activityIndicatorView];
-    
 }
 
 - (void)setInfiniteScrollingActionHandler:(void (^)(void))actionHandler {
     self.originalTableFooterView = [(UITableView*)self.scrollView tableFooterView];
     infiniteScrollingActionHandler = [actionHandler copy];
     self.showsInfiniteScrolling = YES;
-    self.frame = CGRectMake(0, 0, self.scrollView.bounds.size.width, 60);
+    CGFloat height = 50;
+    if (self.originalTableFooterView.frame.size.height != 0) {
+        height = self.originalTableFooterView.frame.size.height;
+    }
+    self.frame = CGRectMake(0, 0, self.scrollView.bounds.size.width, height);
     [(UITableView*)self.scrollView setTableFooterView:self];
     self.state = SVPullToRefreshStateHidden;
     [self addSubview:self.activityIndicatorView];
@@ -219,17 +213,8 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 	dateLabel.textColor = newTextColor;
 }
 
-//- (void)setActivityIndicatorViewStyle:(UIActivityIndicatorViewStyle)viewStyle {
-//    self.activityIndicatorView.activityIndicatorViewStyle = viewStyle;
-//}
-
 - (void)setScrollViewContentInset:(UIEdgeInsets)contentInset {
-    
-//    CGFloat duration = (contentInset.top / (self.scrollView.contentInset.top*2));
-//    NSLog(@"tar %f", contentInset.top);
-//    NSLog(@"cur %f", self.scrollView.contentInset.top);
-//    NSLog(@"ori %f", self.originalScrollViewContentInset.top);
-    
+        
     [UIView animateWithDuration:0.4 delay:0.0 options:UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
         self.scrollView.contentInset = contentInset;
     } completion:^(BOOL finished) {
@@ -285,9 +270,6 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 }
 
 - (void)scrollViewDidScroll:(CGPoint)contentOffset {
-    //NSLog(@"y: %f", contentOffset.y);
-//    NSLog(@"state: %i", self.state);
-    //NSLog(@"dragggin: %i", self.scrollView.tag);
     if(pullToRefreshActionHandler) {
         if (self.state == SVPullToRefreshStateLoading) {
             CGFloat offset = MAX(self.scrollView.contentOffset.y * -1, 0);
@@ -295,31 +277,25 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
             self.scrollView.contentInset = UIEdgeInsetsMake(self.originalScrollViewContentInset.top + 10, 0.0f, 0.0f, 0.0f);
         } else {
             CGFloat scrollOffsetThreshold = ((self.titleLabel.center.y - SVPullToRefreshViewHeight) * 2) - self.originalScrollViewContentInset.top;
-            //NSLog(@"threshold: %f", scrollOffsetThreshold);
             
             if(!self.scrollView.isDragging && self.state == SVPullToRefreshStateTriggered){
                 self.state = SVPullToRefreshStateLoading;
-                //NSLog(@"set to loading");
             }
             else if(contentOffset.y > scrollOffsetThreshold && contentOffset.y < -self.originalScrollViewContentInset.top /*&& self.scrollView.isDragging*/ && self.state != SVPullToRefreshStateLoading)
             {
                 self.state = SVPullToRefreshStateVisible;
-                //NSLog(@"set to visible");
             }
             else if(contentOffset.y < scrollOffsetThreshold /*&& self.scrollView.isDragging*/   && self.state == SVPullToRefreshStateVisible)
             {
                 self.state = SVPullToRefreshStateTriggered;
-                //NSLog(@"set to triggered");
             }
             else if(contentOffset.y >= -self.originalScrollViewContentInset.top && self.state != SVPullToRefreshStateHidden) {
                 self.state = SVPullToRefreshStateHidden;
-                //NSLog(@"set to hidden");
             }
         }
     }
     else if(infiniteScrollingActionHandler) {
         CGFloat scrollOffsetThreshold = self.scrollView.contentSize.height-self.scrollView.bounds.size.height-self.originalScrollViewContentInset.top;
-        
         if(contentOffset.y > MAX(scrollOffsetThreshold, self.scrollView.bounds.size.height-self.scrollView.contentSize.height) && self.state == SVPullToRefreshStateHidden)
             self.state = SVPullToRefreshStateLoading;
         else if(contentOffset.y < scrollOffsetThreshold)
@@ -329,7 +305,6 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 
 - (void)triggerRefresh {
     self.state = SVPullToRefreshStateLoading;
-    //[self.scrollView setContentOffset:CGPointMake(0, -SVPullToRefreshViewHeight-originalScrollViewContentInset.top) animated:YES];
 }
 
 - (void)startAnimating{
@@ -402,9 +377,6 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 }
 
 - (void)setState:(SVPullToRefreshState)newState {
-    //NSLog(@"%@", NSStringFromCGRect(self.frame));
-    
-    //[self.superview bringSubviewToFront:self];
     
     if(pullToRefreshActionHandler && !self.showsPullToRefresh && !self.activityIndicatorView.isAnimating) {
         titleLabel.text = NSLocalizedString(@"",);
