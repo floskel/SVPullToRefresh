@@ -189,7 +189,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     self.loadingView.backgroundColor = [UIColor colorWithRed:241/255.f green:91/255.f blue:71/255.f alpha:1.0];
     [self addSubview:self.loadingView];
     self.anim = [CAKeyframeAnimation animationWithKeyPath:@"position"];
-    [self addSubview:self.activityIndicatorView];
+    //[self addSubview:self.activityIndicatorView];
 }
 
 - (void)setInfiniteScrollingActionHandler:(void (^)(void))actionHandler {
