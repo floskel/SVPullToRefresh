@@ -348,6 +348,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     [self.anim setValues:values];
     [self.anim setDuration:2.0]; //seconds
     [self.loadingView.layer addAnimation:self.anim forKey:@"position"];
+        isAnimating = YES;
     }
 }
 
