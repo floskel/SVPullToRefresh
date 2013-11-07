@@ -305,6 +305,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 
 - (void)triggerRefresh {
     self.state = SVPullToRefreshStateLoading;
+    [self moveToLoadingView];
 }
 
 - (void)startAnimating{
