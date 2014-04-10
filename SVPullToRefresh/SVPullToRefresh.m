@@ -185,8 +185,8 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     
     [self addSubview:self.arrowImageView];
     
-    self.loadingView = [[UIView alloc] initWithFrame:CGRectMake(-40, 0, 40, 10)];
-    self.loadingView.backgroundColor = [UIColor colorWithRed:241/255.f green:91/255.f blue:71/255.f alpha:1.0];
+    self.loadingView = [[UIView alloc] initWithFrame:CGRectMake(-25, 0, 25, 7)];
+    self.loadingView.backgroundColor = [UIColor colorWithRed:250/255.f green:75/255.f blue:50/255.f alpha:1.0];
     [self addSubview:self.loadingView];
     self.anim = [CAKeyframeAnimation animationWithKeyPath:@"position"];
     //[self addSubview:self.activityIndicatorView];
@@ -274,7 +274,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
         if (self.state == SVPullToRefreshStateLoading) {
             CGFloat offset = MAX(self.scrollView.contentOffset.y * -1, 0);
             offset = MIN(offset, self.originalScrollViewContentInset.top + SVPullToRefreshViewHeight);
-            self.scrollView.contentInset = UIEdgeInsetsMake(self.originalScrollViewContentInset.top + 10, 0.0f, 0.0f, 0.0f);
+            self.scrollView.contentInset = UIEdgeInsetsMake(self.originalScrollViewContentInset.top + 7, 0.0f, 0.0f, 0.0f);
         } else {
             CGFloat scrollOffsetThreshold = ((self.titleLabel.center.y - SVPullToRefreshViewHeight) * 2) - self.originalScrollViewContentInset.top;
             
@@ -341,9 +341,9 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
     [self.anim setKeyTimes:times];
     
     NSArray *values = [NSArray arrayWithObjects:
-                       [NSValue valueWithCGPoint:CGPointMake(0, SVPullToRefreshViewHeight - 5)],
-                       [NSValue valueWithCGPoint:CGPointMake(320, SVPullToRefreshViewHeight - 5)],
-                       [NSValue valueWithCGPoint:CGPointMake(0, SVPullToRefreshViewHeight - 5)],
+                       [NSValue valueWithCGPoint:CGPointMake(0, SVPullToRefreshViewHeight - 3.5)],
+                       [NSValue valueWithCGPoint:CGPointMake(320, SVPullToRefreshViewHeight - 3.5)],
+                       [NSValue valueWithCGPoint:CGPointMake(0, SVPullToRefreshViewHeight - 3.5)],
                        nil];
     
     [self.anim setValues:values];
