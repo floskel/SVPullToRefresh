@@ -356,7 +356,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 - (void) moveToLoadingView
 {
     //NSLog(@"%f %f", self.frame.size.height, self.originalScrollViewContentInset.top);
-    if (self.state == SVPullToRefreshStateLoading) {
+    if (self.state == SVPullToRefreshStateLoading && self.superview != nil) {
         UIEdgeInsets newInset = UIEdgeInsetsMake(self.scrollView.contentInset.top + 20, 0, 0, 0);
         [self setScrollViewContentInset:newInset];
     }
