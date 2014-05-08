@@ -369,7 +369,7 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 -(void) animationDidStop:(CAAnimation *)anim finished:(BOOL)flag
 {
     isAnimating = NO;
-    if (self.state == SVPullToRefreshStateLoading) {
+    if (self.state == SVPullToRefreshStateLoading && self.superview != nil) {
         [self startLoadingAnimation];
     }
 }
