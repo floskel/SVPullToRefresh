@@ -213,7 +213,11 @@ static CGFloat const SVPullToRefreshViewHeight = 225;
 	dateLabel.textColor = newTextColor;
 }
 
-- (void)setScrollViewContentInset:(UIEdgeInsets)contentInset {
+- (void)setScrollViewContentInset:(UIEdgeInsets)contentInset
+{
+    if (self.superview == nil) {
+        return;
+    }
         
     [UIView animateWithDuration:0.4 delay:0.0 options:UIViewAnimationOptionAllowUserInteraction|UIViewAnimationOptionBeginFromCurrentState animations:^{
         self.scrollView.contentInset = contentInset;
